@@ -1,0 +1,218 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${env:OTEL_COLLECTOR_HOST}:${env:OTEL_COLLECTOR_PORT_GRPC}
+      http:
+        endpoint: ${env:OTEL_COLLECTOR_HOST}:${env:OTEL_COLLECTOR_PORT_HTTP}
+        cors:
+          allowed_origins:
+            - "http://*"
+            - "https://*"
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+  # Host metrics
+  hostmetrics:
+    root_path: /hostfs
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      disk:
+      load:
+      filesystem:
+        exclude_mount_points:
+          mount_points:
+            - /dev/*
+            - /proc/*
+            - /sys/*
+            - /run/k3s/containerd/*
+            - /var/lib/docker/*
+            - /var/lib/kubelet/*
+            - /snap/*
+            - /hostfs/oldroot
+          match_type: regexp
+        exclude_fs_types:
+          fs_types:
+            - autofs
+            - binfmt_misc
+            - bpf
+            - cgroup2
+            - configfs
+            - debugfs
+            - devpts
+            - devtmpfs
+            - fusectl
+            - hugetlbfs
+            - iso9660
+            - mqueue
+            - nsfs
+            - overlay
+            - proc
+            - procfs
+            - pstore
+            - rpc_pipefs
+            - securityfs
+            - selinuxfs
+            - squashfs
+            - sysfs
+            - tracefs
+          match_type: strict
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+      network:
+      paging:
+      processes:
+      process:
+        mute_process_exe_error: true
+        mute_process_io_error: true
+        mute_process_user_error: true
+
+
+
+
+exporters:
+  debug:
+  otlphttp/prometheus:
+    endpoint: "http://prometheus:9090/api/v1/otlp"
+    tls:
+      insecure: true
+  
+  loadbalancing:
+    protocol:
+      otlp:
+        tls:
+          insecure: true
+    resolver:
+      static:
+        hostnames:
+            - tracingbenchmark-jaeger-collector-1:4317
+            - tracingbenchmark-jaeger-collector-2:4317
+            - tracingbenchmark-jaeger-collector-3:4317
+            - tracingbenchmark-jaeger-collector-4:4317
+            - tracingbenchmark-jaeger-collector-5:4317
+            - tracingbenchmark-jaeger-collector-6:4317
+            - tracingbenchmark-jaeger-collector-7:4317
+            - tracingbenchmark-jaeger-collector-8:4317    
+            - tracingbenchmark-jaeger-collector-9:4317
+            - tracingbenchmark-jaeger-collector-10:4317
+            - tracingbenchmark-jaeger-collector-11:4317
+            - tracingbenchmark-jaeger-collector-12:4317
+            - tracingbenchmark-jaeger-collector-13:4317
+            - tracingbenchmark-jaeger-collector-14:4317
+            - tracingbenchmark-jaeger-collector-15:4317
+            - tracingbenchmark-jaeger-collector-16:4317
+            - tracingbenchmark-jaeger-collector-17:4317
+            - tracingbenchmark-jaeger-collector-18:4317
+            - tracingbenchmark-jaeger-collector-19:4317
+            - tracingbenchmark-jaeger-collector-20:4317
+            - tracingbenchmark-jaeger-collector-21:4317
+            - tracingbenchmark-jaeger-collector-22:4317
+            - tracingbenchmark-jaeger-collector-23:4317
+            - tracingbenchmark-jaeger-collector-24:4317
+            - tracingbenchmark-jaeger-collector-25:4317
+            - tracingbenchmark-jaeger-collector-26:4317
+            - tracingbenchmark-jaeger-collector-27:4317
+            - tracingbenchmark-jaeger-collector-28:4317
+            - tracingbenchmark-jaeger-collector-29:4317
+            - tracingbenchmark-jaeger-collector-30:4317
+            - tracingbenchmark-jaeger-collector-31:4317
+            - tracingbenchmark-jaeger-collector-32:4317
+            - tracingbenchmark-jaeger-collector-33:4317
+            - tracingbenchmark-jaeger-collector-34:4317
+            - tracingbenchmark-jaeger-collector-35:4317
+            - tracingbenchmark-jaeger-collector-36:4317
+            - tracingbenchmark-jaeger-collector-37:4317
+            - tracingbenchmark-jaeger-collector-38:4317
+            - tracingbenchmark-jaeger-collector-39:4317
+            - tracingbenchmark-jaeger-collector-40:4317
+            - tracingbenchmark-jaeger-collector-41:4317
+            - tracingbenchmark-jaeger-collector-42:4317
+            - tracingbenchmark-jaeger-collector-43:4317
+            - tracingbenchmark-jaeger-collector-44:4317
+            - tracingbenchmark-jaeger-collector-45:4317
+            - tracingbenchmark-jaeger-collector-46:4317
+            - tracingbenchmark-jaeger-collector-47:4317
+            - tracingbenchmark-jaeger-collector-48:4317
+            - tracingbenchmark-jaeger-collector-49:4317
+            - tracingbenchmark-jaeger-collector-50:4317
+            # - tracingbenchmark-jaeger-collector-51:4317
+            # - tracingbenchmark-jaeger-collector-52:4317
+            # - tracingbenchmark-jaeger-collector-53:4317
+            # - tracingbenchmark-jaeger-collector-54:4317
+            # - tracingbenchmark-jaeger-collector-55:4317
+            # - tracingbenchmark-jaeger-collector-56:4317
+            # - tracingbenchmark-jaeger-collector-57:4317
+            # - tracingbenchmark-jaeger-collector-58:4317
+            # - tracingbenchmark-jaeger-collector-59:4317
+            # - tracingbenchmark-jaeger-collector-60:4317
+            # - tracingbenchmark-jaeger-collector-61:4317
+            # - tracingbenchmark-jaeger-collector-62:4317
+            # - tracingbenchmark-jaeger-collector-63:4317
+            # - tracingbenchmark-jaeger-collector-64:4317
+            # - tracingbenchmark-jaeger-collector-65:4317
+            # - tracingbenchmark-jaeger-collector-66:4317
+            # - tracingbenchmark-jaeger-collector-67:4317
+            # - tracingbenchmark-jaeger-collector-68:4317
+            # - tracingbenchmark-jaeger-collector-69:4317
+            # - tracingbenchmark-jaeger-collector-70:4317
+            # - tracingbenchmark-jaeger-collector-71:4317
+            # - tracingbenchmark-jaeger-collector-72:4317
+            # - tracingbenchmark-jaeger-collector-73:4317
+            # - tracingbenchmark-jaeger-collector-74:4317
+            # - tracingbenchmark-jaeger-collector-75:4317
+            # - tracingbenchmark-jaeger-collector-76:4317
+            # - tracingbenchmark-jaeger-collector-77:4317
+            # - tracingbenchmark-jaeger-collector-78:4317
+            # - tracingbenchmark-jaeger-collector-79:4317
+            # - tracingbenchmark-jaeger-collector-80:4317
+            # - tracingbenchmark-jaeger-collector-81:4317
+            # - tracingbenchmark-jaeger-collector-82:4317
+            # - tracingbenchmark-jaeger-collector-83:4317
+            # - tracingbenchmark-jaeger-collector-84:4317
+            # - tracingbenchmark-jaeger-collector-85:4317
+            # - tracingbenchmark-jaeger-collector-86:4317
+            # - tracingbenchmark-jaeger-collector-87:4317
+            # - tracingbenchmark-jaeger-collector-88:4317
+            # - tracingbenchmark-jaeger-collector-89:4317
+            # - tracingbenchmark-jaeger-collector-90:4317
+            # - tracingbenchmark-jaeger-collector-91:4317
+            # - tracingbenchmark-jaeger-collector-92:4317
+            # - tracingbenchmark-jaeger-collector-93:4317
+            # - tracingbenchmark-jaeger-collector-94:4317
+            # - tracingbenchmark-jaeger-collector-95:4317
+            # - tracingbenchmark-jaeger-collector-96:4317
+            # - tracingbenchmark-jaeger-collector-97:4317
+            # - tracingbenchmark-jaeger-collector-98:4317
+            # - tracingbenchmark-jaeger-collector-99:4317
+            # - tracingbenchmark-jaeger-collector-100:4317
+
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 5s
+    limit_percentage: 80
+    spike_limit_percentage: 25
+
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      # processors: [batch]
+      exporters: [loadbalancing]
+    metrics:
+      receivers: [hostmetrics, docker_stats]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/prometheus, debug]
+
+
+
+
+

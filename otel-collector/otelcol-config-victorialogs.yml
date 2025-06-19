@@ -1,0 +1,105 @@
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${env:OTEL_COLLECTOR_HOST}:${env:OTEL_COLLECTOR_PORT_GRPC}
+      http:
+        endpoint: ${env:OTEL_COLLECTOR_HOST}:${env:OTEL_COLLECTOR_PORT_HTTP}
+        cors:
+          allowed_origins:
+            - "http://*"
+            - "https://*"
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+  # Host metrics
+  hostmetrics:
+    root_path: /hostfs
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      disk:
+      load:
+      filesystem:
+        exclude_mount_points:
+          mount_points:
+            - /dev/*
+            - /proc/*
+            - /sys/*
+            - /run/k3s/containerd/*
+            - /var/lib/docker/*
+            - /var/lib/kubelet/*
+            - /snap/*
+          match_type: regexp
+        exclude_fs_types:
+          fs_types:
+            - autofs
+            - binfmt_misc
+            - bpf
+            - cgroup2
+            - configfs
+            - debugfs
+            - devpts
+            - devtmpfs
+            - fusectl
+            - hugetlbfs
+            - iso9660
+            - mqueue
+            - nsfs
+            - overlay
+            - proc
+            - procfs
+            - pstore
+            - rpc_pipefs
+            - securityfs
+            - selinuxfs
+            - squashfs
+            - sysfs
+            - tracefs
+          match_type: strict
+      memory:
+        metrics:
+          system.memory.utilization:
+            enabled: true
+      network:
+      paging:
+      processes:
+      process:
+        mute_process_exe_error: true
+        mute_process_io_error: true
+        mute_process_user_error: true
+
+
+connectors:
+  spanmetrics:
+
+exporters:
+  debug:
+  otlphttp/prometheus:
+    endpoint: "http://prometheus:9090/api/v1/otlp"
+    tls:
+      insecure: true
+  
+  otlphttp/victorialogs:
+    endpoint: http://${env:VICTORIALOGS_HOST}:${env:VICTORIALOGS_PORT}/insert/opentelemetry/
+
+
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 5s
+    limit_percentage: 80
+    spike_limit_percentage: 25
+
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlphttp/victorialogs]
+    metrics:
+      receivers: [hostmetrics, docker_stats, otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/prometheus, debug]

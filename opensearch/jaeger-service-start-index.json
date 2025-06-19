@@ -1,0 +1,20 @@
+{
+  "aliases": {
+    "jaeger-service-read": {},
+    "jaeger-service-write": {
+      "is_write_index": true
+    }
+  },
+  "settings": {
+    "index.number_of_shards": 1,
+    "index.number_of_replicas": 0,
+    "plugins.index_state_management.policy_id": "jaeger-ism-policy",
+    "opendistro.index_state_management.rollover_alias": "jaeger-service-write"
+  },
+  "mappings": {
+    "dynamic": true,
+    "properties": {
+      "serviceName": { "type": "keyword" }
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "index_patterns": ["jaeger-span-*"],
+  "template": {
+    "aliases": {
+      "jaeger-span-read": {}
+    },
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "plugins.index_state_management.policy_id": "jaeger-ism-policy",
+      "opendistro.index_state_management.rollover_alias": "jaeger-span-write"
+    },
+    "mappings" : {
+      "dynamic_templates" : [
+        {
+          "span_tags_map" : {
+            "path_match" : "tag.*",
+            "mapping" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        {
+          "process_tags_map" : {
+            "path_match" : "process.tag.*",
+            "mapping" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        }
+      ],
+      "properties" : {
+        "duration" : {
+          "type" : "long"
+        },
+        "flags" : {
+          "type" : "integer"
+        },
+        "logs" : {
+          "type" : "nested",
+          "dynamic" : "false",
+          "properties" : {
+            "fields" : {
+              "type" : "nested",
+              "dynamic" : "false",
+              "properties" : {
+                "key" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                },
+                "type" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                },
+                "value" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                }
+              }
+            },
+            "timestamp" : {
+              "type" : "long"
+            }
+          }
+        },
+        "operationName" : {
+          "type" : "keyword",
+          "ignore_above" : 256
+        },
+        "parentSpanID" : {
+          "type" : "keyword",
+          "ignore_above" : 256
+        },
+        "process" : {
+          "properties" : {
+            "serviceName" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            },
+            "tag" : {
+              "type" : "object"
+            },
+            "tags" : {
+              "type" : "nested",
+              "dynamic" : "false",
+              "properties" : {
+                "key" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                },
+                "type" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                },
+                "value" : {
+                  "type" : "keyword",
+                  "ignore_above" : 256
+                }
+              }
+            }
+          }
+        },
+        "references" : {
+          "type" : "nested",
+          "dynamic" : "false",
+          "properties" : {
+            "refType" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            },
+            "spanID" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            },
+            "traceID" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "spanID" : {
+          "type" : "keyword",
+          "ignore_above" : 256
+        },
+        "startTime" : {
+          "type" : "long"
+        },
+        "startTimeMillis" : {
+          "type" : "date",
+          "format" : "epoch_millis"
+        },
+        "tag" : {
+          "type" : "object"
+        },
+        "tags" : {
+          "type" : "nested",
+          "dynamic" : "false",
+          "properties" : {
+            "key" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            },
+            "type" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            },
+            "value" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "traceID" : {
+          "type" : "keyword",
+          "ignore_above" : 256
+        }
+      }
+    }
+  },
+  "priority": 100
+}

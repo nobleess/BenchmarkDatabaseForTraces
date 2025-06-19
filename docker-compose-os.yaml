@@ -1,0 +1,147 @@
+version: '3.9'
+
+
+services:
+
+  otel-collector:
+    container_name: otel-collector
+    image: ${COLLECTOR_CONTRIB_IMAGE}
+    volumes:
+      - ${OTEL_COLLECTOR_CONFIG_EXTRAS}:/etc/otelcol-config.yml
+      - ${HOST_FILESYSTEM}:/hostfs:ro
+      - ${DOCKER_SOCK}:/var/run/docker.sock:ro
+    command: ["--config=/etc/otelcol-config.yml"]
+    ports:
+      - "${OTEL_COLLECTOR_PORT_GRPC}"
+      - "${OTEL_COLLECTOR_PORT_HTTP}"
+    restart: always
+    user: 0:0
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+      - HOST_FILESYSTEM
+      - OTEL_COLLECTOR_HOST
+      - OTEL_COLLECTOR_PORT_GRPC
+      - OTEL_COLLECTOR_PORT_HTTP
+    depends_on:
+      - jaeger-collector
+    
+  tracegen:
+    container_name: tracegen
+    build:
+      context: tracegen
+      dockerfile: Dockerfile
+    command:
+    # - "-marshal"
+    - "-service=tracegen"
+    - "-rate=500"
+    - "-workers=200"
+    - "-duration=5m" 
+    - "-otlp-endpoint=otel-collector:4317"
+    - "-otlp-insecure"
+    # - "-otlp-http" 
+    depends_on:
+      - otel-collector
+        
+
+  
+  jaeger-collector:
+    image: ${JAEGERTRACING_COLLECTOR_IMAGE}
+    # container_name: jaeger-collector1
+    restart: always
+    command: 
+      "--collector.num-workers=100"
+    environment:
+      - SPAN_STORAGE_TYPE=opensearch
+      - ES_SERVER_URLS=http://opensearch:9200
+      - ES_USE_ILM=true
+      - ES_USE_ALIASES=true
+      - LOG_LEVEL=debug
+      - ES_SERVICE_CACHE_TTL=1m
+    depends_on:
+      opensearch-loader:
+        condition: service_completed_successfully
+    deploy:
+      replicas: 50
+ 
+
+
+  jaeger-query:
+    image: ${JAEGERTRACING_QUERY_IMAGE}
+    container_name: jaeger-query
+    restart: always
+    environment:
+      - SPAN_STORAGE_TYPE=opensearch
+      - ES_SERVER_URLS=http://opensearch:9200
+      - ES_TLS_ENABLED=false
+      - LOG_LEVEL=debug
+      - ES_USE_ILM=true
+      - ES_USE_ALIASES=true
+    ports:
+      - 16686:16686
+
+        
+
+  # jaeger:
+  #   image: ${JAEGERTRACING_IMAGE}
+  #   container_name: jaeger
+  #   command:
+  #     # - "--collector.queue-size=10000000"
+  #     - "--collector.queue-size-memory=1000"
+  #     - "--query.base-path=/jaeger/ui"
+  #     - "--prometheus.server-url=http://${PROMETHEUS_ADDR}"
+  #     - "--prometheus.query.normalize-calls=true"
+  #     - "--prometheus.query.normalize-duration=true"
+  #     - "--collector.num-workers=500"
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${OTEL_COLLECTOR_PORT_GRPC}"
+  #     - "${OTEL_COLLECTOR_PORT_HTTP}"
+  #     - "${JAEGER_PORT}:${JAEGER_PORT}"
+  #   environment:
+  #     # - LOG_LEVEL=debug
+  #     - COLLECTOR_OTLP_ENABLED=true
+  #     - METRICS_STORAGE_TYPE=prometheus
+  #     - SPAN_STORAGE_TYPE=elasticsearch
+  #     - ES_SERVER_URLS=http://opensearch:9200
+  #     - ES_USE_ILM=true
+  #     - ES_USE_ALIASES=true
+  #   depends_on:
+  #     opensearch:
+  #       condition: service_healthy
+
+  opensearch-loader:
+    container_name: opensearch-loader
+    image: curlimages/curl:8.11.1
+    command:
+      - "/bin/sh"
+      - "-c"
+      - |
+        /init/opensearch/init.sh
+    volumes:
+      - ./opensearch:/init/opensearch
+    depends_on:
+      opensearch:
+        condition: service_healthy
+
+  opensearch:
+    container_name: opensearch
+    image: ${OPENSEARCH_IMAGE}
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+      # - OPENSEARCH_INITIAL_ADMIN_PASSWORD=JNqjSlMT!1
+    ports:
+      - "9200:9200"
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    

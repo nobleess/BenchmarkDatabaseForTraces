@@ -1,0 +1,47 @@
+{
+  "index_patterns": ["jaeger-service-*"],
+  "template": {
+        "aliases": {
+      "jaeger-service-read": {}
+    },
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "plugins.index_state_management.policy_id": "jaeger-ism-policy",
+      "opendistro.index_state_management.rollover_alias": "jaeger-service-write"
+    },
+    "mappings" : {
+      "dynamic_templates" : [
+        {
+          "span_tags_map" : {
+            "path_match" : "tag.*",
+            "mapping" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        {
+          "process_tags_map" : {
+            "path_match" : "process.tag.*",
+            "mapping" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        }
+      ],
+      "properties" : {
+        "operationName" : {
+          "type" : "keyword",
+          "ignore_above" : 256
+        },
+        "serviceName" : {
+          "type" : "keyword",
+          "ignore_above" : 256
+        }
+      }
+    }
+  },
+  "priority": 90
+}

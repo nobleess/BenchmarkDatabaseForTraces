@@ -1,0 +1,43 @@
+{
+  "policy": {
+    "description": "Jaeger ISM policy (strict conversion)",
+    "default_state": "hot",
+    "states": [
+      {
+        "name": "hot",
+        "actions": [
+          {
+            "rollover": {
+              "min_index_age": "6h"
+            }
+          },
+          {
+            "index_priority": {
+              "priority": 100
+            }
+          }
+        ],
+        "transitions": [
+          {
+            "state_name": "delete",
+            "conditions": {
+              "min_index_age": "14d"
+            }
+          }
+        ]
+      },
+      {
+        "name": "delete",
+        "actions": [
+          {
+            "delete": {}
+          }
+        ]
+      }
+    ],
+    "ism_template": {
+      "index_patterns": ["jaeger-*"],
+      "priority": 100
+    }
+  }
+}

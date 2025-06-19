@@ -1,0 +1,36 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+
+apiVersion: 1
+
+# datasources:
+#   - name: clkh
+#     uid: webstore-traces-clkh
+#     type: jaeger
+#     url: http://jaeger_query:16686
+#     editable: true
+#     isDefault: false
+#     jsonData:
+#       tracesToLogsV2:
+#         datasourceUid: webstore-logs
+#         spanStartTimeShift: "-20m"
+#         spanEndTimeShift: "20m"
+#         filterByTraceID: true
+#         filterBySpanID: true
+#         customQuery: true
+#         query: traceId:"$${__trace.traceId}" AND spanId:"$${__span.spanId}"
+
+
+datasources:
+  - name: ClickHouse
+    type: grafana-clickhouse-datasource  # Требуется установка плагина `grafana-clickhouse-datasource`
+    access: proxy
+    jsonData:
+      url: http://clickhouse:8123
+      port: 9000
+      host: clickhouse  # Адрес сервера ClickHouse
+      traces:
+        otelEnabled: true    
+    secureJsonData:
+      password: "hello2Jaeger"  # Пароль, если требуется

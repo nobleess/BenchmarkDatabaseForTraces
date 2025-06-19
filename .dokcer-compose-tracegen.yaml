@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  
+  # --- OpenTelemetry Demo App ---
+  tracegen:
+    container_name: tracegen
+    image: jaegertracing/jaeger-tracegen:1.70
+    ports:
+      - "8080:8080"
+    command:
+    - "-service=tracegen"
+    - "-spans=10"
+    - "-traces=5000"
+    - "-duration=1m"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+    depends_on:
+

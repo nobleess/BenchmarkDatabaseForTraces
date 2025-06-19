@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+
+  otel-collector:
+    container_name: otel-collector
+    image: ${COLLECTOR_CONTRIB_IMAGE}
+    volumes:
+      - ${OTEL_COLLECTOR_CONFIG_EXTRAS}:/etc/otelcol-config.yml
+      - ${HOST_FILESYSTEM}:/hostfs:ro
+      - ${DOCKER_SOCK}:/var/run/docker.sock:ro
+    command: ["--config=/etc/otelcol-config.yml"]
+    ports:
+      - "${OTEL_COLLECTOR_PORT_GRPC}"
+      - "${OTEL_COLLECTOR_PORT_HTTP}"
+    restart: always
+    user: 0:0
+    environment:
+      - ENVOY_PORT
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+      - HOST_FILESYSTEM
+      - OTEL_COLLECTOR_HOST
+      - OTEL_COLLECTOR_PORT_GRPC
+      - OTEL_COLLECTOR_PORT_HTTP
+      - GOMEMLIMIT=160MiB
+    
+
+  tracegen:
+    container_name: tracegen
+    build:
+      context: tracegen
+      dockerfile: Dockerfile
+    command:
+      - "-service=tracegen"
+      - "-rate=500"
+      - "-workers=200"
+      - "-duration=5m" 
+      - "-otlp-endpoint=tempo:4317"
+      - "-otlp-insecure"
+    depends_on:
+      - tempo
+
+  tempo:
+    container_name: tempo
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "14268:14268"  # jaeger ingest
+      - "3200:3200"   # tempo
+      - "9095:9095" # tempo grpc
+      - "4317:4317"  # otlp grpc
+      - "4318:4318"  # otlp http
+      - "9411:9411"   # zipkin
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: 2

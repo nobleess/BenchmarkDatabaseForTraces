@@ -1,0 +1,90 @@
+version: "3.8"
+
+services:
+
+  otel-collector:
+    container_name: otel-collector
+    image: ${COLLECTOR_CONTRIB_IMAGE}
+    volumes:
+      - ${OTEL_COLLECTOR_CONFIG_EXTRAS}:/etc/otelcol-config.yml
+      - ${HOST_FILESYSTEM}:/hostfs:ro
+      - ${DOCKER_SOCK}:/var/run/docker.sock:ro
+    command: ["--config=/etc/otelcol-config.yml"]
+    ports:
+      - "${OTEL_COLLECTOR_PORT_GRPC}"
+      - "${OTEL_COLLECTOR_PORT_HTTP}"
+    restart: always
+    user: 0:0
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT
+      - HOST_FILESYSTEM
+      - OTEL_COLLECTOR_HOST
+      - OTEL_COLLECTOR_PORT_GRPC
+      - OTEL_COLLECTOR_PORT_HTTP
+    depends_on:
+      - clickhouse
+
+  tracegen:
+    container_name: tracegen
+    build:
+      context: tracegen
+      dockerfile: Dockerfile
+    command:
+    - "-service=tracegen"
+    - "-rate=500"
+    - "-workers=200"
+    - "-duration=5m" 
+    - "-otlp-endpoint=otel-collector:4317"
+    - "-otlp-insecure"
+    
+  
+  # jaeger_collector:
+  #   container_name: jaeger_collector
+  #   image: jaegertracing/jaeger-collector:1.43
+  #   restart: unless-stopped
+  #   environment:
+  #     - SPAN_STORAGE_TYPE=grpc-plugin
+  #   command:
+  #     -  "--grpc-storage-plugin.binary=/etc/jaeger-clickhouse/jaeger-clickhouse-plugin"
+  #     -  "--grpc-storage-plugin.configuration-file=/etc/jaeger-clickhouse/config.yml"
+  #     -  "--collector.otlp.enabled=true"
+  #     -  "--collector.otlp.grpc.host-port=0.0.0.0:4317"
+  #   volumes:
+  #       - ./jaeger-clickhouse-binary:/etc/jaeger-clickhouse
+  #   ports:
+  #       - "4317:4317"
+  #   depends_on:
+  #     - clickhouse
+      
+
+  jaeger_query:
+    container_name: jaeger_query
+    image: jaegertracing/jaeger-query:1.43
+    restart: unless-stopped
+    environment:
+      - SPAN_STORAGE_TYPE=grpc-plugin
+    command:
+      - "--grpc-storage-plugin.binary=/etc/jaeger-clickhouse/jaeger-clickhouse-plugin"
+      - "--grpc-storage-plugin.configuration-file=/etc/jaeger-clickhouse/config.yml"
+    volumes:
+        - ./jaeger-clickhouse-binary:/etc/jaeger-clickhouse
+    ports:
+        - "16686:16686"
+  
+  clickhouse:
+    image: clickhouse/clickhouse-server:22.8.15.23-alpine
+    container_name: clickhouse
+    restart: unless-stopped
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=hello2Jaeger
+      - CLICKHOUSE_DB=jaeger
+    ports:
+      - 9000
+      - 8123
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: 2
+

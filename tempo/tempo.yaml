@@ -1,0 +1,53 @@
+server:
+  http_listen_port: 3200
+
+
+overrides:
+  defaults:
+    ingestion:
+      max_traces_per_user: 500000
+      rate_limit_bytes: 200000000
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "tempo:4317"
+        http:
+          endpoint: "tempo:4318"
+
+ingester:
+  trace_idle_period: 10s
+  max_block_duration: 5m
+
+
+compactor:
+  compaction:
+    compacted_block_retention: 72h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo
+stream_over_http_enabled: true
+
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: docker-compose
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    local_blocks:
+      filter_server_spans: false
+      flush_to_storage: true
+

@@ -5,7 +5,7 @@ services:
   # --- Alternative load generator ---
   tracegen:
     container_name: tracegen
-    image: jaegertracing/jaeger-tracegen:1.70
+    image: jaegertracing/jaeger-tracegen:1.70.0
     ports:
       - "8080:8080"
     command:
@@ -15,5 +15,21 @@ services:
     - "-duration=1m"
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT
-    depends_on:
+
+  # https://github.com/krzko/otelgen/tree/main
+  tracegen2:
+    container_name: otelgen
+    image: ghcr.io/krzko/otelgen:latest
+    command:
+      - "--service-name=otelgen"
+      # - "--protocol=http" 
+      - "--insecure"
+      - "--duration=600"
+      - "--otel-exporter-otlp-endpoint=otel-endpoint:4317"
+      - "--rate=50000"
+      - "traces"
+      - "multi"
+      - "--workers=200"
+
+
 

@@ -19,7 +19,7 @@ TracingBenchmark/
 ├── opensearch – OpenSearch configuration
 ├── opentelemetry-collector-contrib – Source code for tracegen
 ├── opentelemetry-demo – Information source
-├── opentelemetry-demo-vmlogs – Information source
+├── opentelemetry-demo-victorialogs – Information source
 ├── otel-collector – Otel-collector configurations
 ├── prometheus – Prometheus configurations
 ├── tempo – Tempo configuration
@@ -64,8 +64,8 @@ ClickHouse:
 ![diagram](media/images/clkh-jaeger.png)
 ![diagram](media/images/clkh-otel-collector.png)
 
-VMLogs:
-![diagram](media/images/vmlogs.png)
+victorialogs:
+![diagram](media/images/victorialogs.png)
 
 Tempo:
 ![diagram](media/images/tempo.png)
